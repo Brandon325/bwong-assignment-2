@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>KMeans Clustering Algorithm</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <!-- Use a specific version of Plotly -->
+    <script src="https://cdn.plot.ly/plotly-2.11.1.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>KMeans Clustering Algorithm</h1>
+        <div class="instructions">
+            <p>Select the number of clusters and initialization method, then click "Step Through KMeans" or "Run to Convergence".</p>
+            <p>In manual mode, click on the plot to select initial centroids.</p>
+        </div>
+        <form id="kmeans-form">
+            <label for="num-clusters">Number of Clusters (k):</label>
+            <input type="number" id="num-clusters" value="3" min="1">
+            <label for="init-method">Initialization Method:</label>
+            <select id="init-method">
+                <option value="random">Random</option>
+                <option value="farthest">Farthest First</option>
+                <option value="kmeans++">KMeans++</option>
+                <option value="manual">Manual</option>
+            </select>
+        </form>
+        <div class="buttons">
+            <button id="step-kmeans">Step Through KMeans</button>
+            <button id="run-kmeans">Run to Convergence</button>
+            <button id="generate-data">Generate New Dataset</button>
+            <button id="reset-kmeans">Reset Algorithm</button>
+        </div>
+        <div id="message-area"></div>
+        <div id="plot"></div>
+    </div>
+    <script src="/static/script.js"></script>
+</body>
+</html>
