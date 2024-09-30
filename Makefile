@@ -1,8 +1,8 @@
 install:
 	python3 -m venv venv
-	. venv/bin/activate && pip install --upgrade pip
-	. venv/bin/activate && pip install -r requirements.txt
+	venv/bin/pip install --upgrade pip
+	venv/bin/pip install -r requirements.txt
+	venv/bin/pip install flake8 pytest
 
-# Run the Flask app
 run:
-	. venv/bin/activate && FLASK_APP=app.py FLASK_ENV=development flask run --host=0.0.0.0 --port=3000
+	FLASK_APP=app.py FLASK_ENV=development venv/bin/flask run --host=0.0.0.0 --port=3000
