@@ -1,0 +1,33 @@
+name: Python application
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.12.6
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.12.6"
+
+    - name: Install Dependencies
+      run: make install
+
+    - name: Run the Application
+      run: |
+        make run &
+        sleep 10
+
+    - name: Confirm Server is Running
+      run: |
+        curl --fail http://localhost:3000 || exit 1
