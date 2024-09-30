@@ -21,9 +21,10 @@ def kmeans(X, k, init='random', manual_centroids=None, max_iter=100):
         labels = assign_clusters(X, centroids)
         new_centroids = recompute_centroids(X, labels, k)
 
-        all_labels.append(labels.tolist())
-        all_centroids.append(new_centroids.tolist())
+        all_labels.append(labels.tolist())  # Append labels from this iteration
+        all_centroids.append(new_centroids.tolist())  # Append centroids
 
+        # Check if centroids have converged
         if np.allclose(centroids, new_centroids):
             break
         centroids = new_centroids
@@ -63,6 +64,7 @@ def kmeans_plus_plus_initialization(X, k):
     return np.array(centroids)
 
 def assign_clusters(X, centroids):
+    # Return the index of the closest centroid for each point
     return np.argmin(np.linalg.norm(X[:, np.newaxis] - centroids, axis=2), axis=1)
 
 def recompute_centroids(X, labels, k):
@@ -70,6 +72,7 @@ def recompute_centroids(X, labels, k):
     for i in range(k):
         points = X[labels == i]
         if len(points) == 0:
+            # Reinitialize centroid if no points are assigned to this cluster
             new_centroid = X[np.random.randint(0, X.shape[0])]
         else:
             new_centroid = points.mean(axis=0)
@@ -92,7 +95,10 @@ def run_kmeans_route():
         if init_method == 'manual' and (manual_centroids is None or len(manual_centroids) != k):
             return jsonify({'error': 'Manual centroids are required for manual initialization and must match k.'}), 400
 
+        # Run KMeans and get centroids and labels
         centroids, labels = kmeans(data, k, init=init_method, manual_centroids=manual_centroids)
+
+        # Return centroids and labels in JSON format
         return jsonify({
             'centroids': centroids,
             'labels': labels

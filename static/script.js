@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let currentIteration = 0;
     let allCentroids = [];
     let allLabels = [];
-    let finalLabels = null;
+    let finalLabels = null; // To store the final labels after convergence
     let isInitialized = false;
     let isRunning = false;
     let manualCentroids = [];
@@ -47,13 +47,16 @@ document.addEventListener('DOMContentLoaded', function () {
             clusterColors = generateColors(k);
         }
 
+        // Use finalLabels if labels are not provided
+        const pointLabels = labels || finalLabels;
+
         const trace = {
             x: data.map(point => point[0]),
             y: data.map(point => point[1]),
             mode: 'markers',
             type: 'scatter',
             marker: {
-                color: labels ? labels.map(label => clusterColors[label % clusterColors.length]) : 'blue'
+                color: pointLabels ? pointLabels.map(label => clusterColors[label % clusterColors.length]) : 'blue'
             }
         };
 
@@ -171,8 +174,8 @@ document.addEventListener('DOMContentLoaded', function () {
             enableButtons();
         } else {
             showMessage("KMeans has converged or reached max iterations.");
-            finalLabels = allLabels[allLabels.length - 1];
-            plotData(currentData, allCentroids[allCentroids.length - 1], finalLabels);
+            finalLabels = allLabels[allLabels.length - 1]; // Store the final labels
+            plotData(currentData, allCentroids[allCentroids.length - 1], finalLabels); // Plot using final labels
             enableButtons();
         }
     }
@@ -193,8 +196,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     setTimeout(step, 500);
                 } else {
                     showMessage("KMeans has converged or reached max iterations.");
-                    finalLabels = allLabels[allLabels.length - 1];
-                    plotData(currentData, allCentroids[allCentroids.length - 1], finalLabels);
+                    finalLabels = allLabels[allLabels.length - 1]; // Store the final labels
+                    plotData(currentData, allCentroids[allCentroids.length - 1], finalLabels); // Plot using final labels
                     isRunning = false;
                     enableButtons();
                 }
@@ -258,11 +261,14 @@ document.addEventListener('DOMContentLoaded', function () {
         isRunning = false;
         isInitialized = false;
         manualCentroids = [];
+        finalLabels = null;        // Reset finalLabels
+        allCentroids = [];         // Reset allCentroids
+        allLabels = [];            // Reset allLabels
         disableManualCentroidSelection();
 
         isManualMode = initMethodSelect.value === 'manual';
 
-        plotData(currentData);
+        plotData(currentData);     // Re-plot data without clusters or centroids
 
         if (isManualMode) {
             showMessage('Algorithm reset. Manual mode activated! Click on the plot to select centroids.');
@@ -287,6 +293,9 @@ document.addEventListener('DOMContentLoaded', function () {
     initMethodSelect.addEventListener('change', function () {
         isInitialized = false;
         manualCentroids = [];
+        finalLabels = null;        // Reset finalLabels
+        allCentroids = [];         // Reset allCentroids
+        allLabels = [];            // Reset allLabels
         disableManualCentroidSelection();
 
         if (initMethodSelect.value === 'manual') {
@@ -303,6 +312,9 @@ document.addEventListener('DOMContentLoaded', function () {
     numClustersInput.addEventListener('change', function () {
         isInitialized = false;
         manualCentroids = [];
+        finalLabels = null;        // Reset finalLabels
+        allCentroids = [];         // Reset allCentroids
+        allLabels = [];            // Reset allLabels
         disableManualCentroidSelection();
 
         if (isManualMode) {
