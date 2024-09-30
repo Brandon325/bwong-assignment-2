@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
-    const plotDiv = document.getElementById('plot');
+    let plotDiv = document.getElementById('plot'); // Note: let instead of const
     const generateButton = document.getElementById('generate-data');
     const runButton = document.getElementById('run-kmeans');
     const stepButton = document.getElementById('step-kmeans');
@@ -79,10 +79,9 @@ document.addEventListener('DOMContentLoaded', function () {
             plotDataArray.push(centroidTrace);
         }
 
-        // Define layout with clickmode set to event
+        // Define layout
         const layout = {
             title: 'KMeans Clustering Animation',
-            clickmode: 'event',
             xaxis: {
                 autorange: true
             },
@@ -93,7 +92,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         Plotly.newPlot(plotDiv, plotDataArray, layout);
 
-        if (isManualMode) {
+        if (isManualMode && manualCentroids.length < parseInt(numClustersInput.value)) {
             enableManualCentroidSelection(); // Ensure manual mode click handling is activated
         }
     }
@@ -204,27 +203,53 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Enable manual centroid selection on plot click
-    function enableManualCentroidSelection() {
-        plotDiv.removeAllListeners('plotly_click'); // Remove any existing listeners
-        plotDiv.on('plotly_click', handlePlotClick); // Use Plotly's click event
-    }
+    // Define the onPlotClick function outside to properly add/remove event listeners
+    function onPlotClick(event) {
+        const xaxis = plotDiv._fullLayout.xaxis;
+        const yaxis = plotDiv._fullLayout.yaxis;
 
-    function handlePlotClick(data) {
+        // Get the bounding rectangle of the plot
+        const bbox = plotDiv.getBoundingClientRect();
+
+        // Calculate the mouse position relative to the plot area
+        const xInPlot = event.clientX - bbox.left;
+        const yInPlot = event.clientY - bbox.top;
+
+        // Check if the click was inside the plot area
+        if (xInPlot < xaxis._offset || xInPlot > xaxis._offset + xaxis._length ||
+            yInPlot < yaxis._offset || yInPlot > yaxis._offset + yaxis._length) {
+            return; // Click was outside the plot area
+        }
+
+        // Adjust the position relative to the axes
+        const xRel = xInPlot - xaxis._offset;
+        const yRel = yInPlot - yaxis._offset;
+
+        // Convert pixel coordinates to data coordinates
+        const xData = xaxis.range[0] + (xRel / xaxis._length) * (xaxis.range[1] - xaxis.range[0]);
+        const yData = yaxis.range[0] + ((yaxis._length - yRel) / yaxis._length) * (yaxis.range[1] - yaxis.range[0]);
+
         if (manualCentroids.length < parseInt(numClustersInput.value)) {
-            var xData = data.points[0].x;
-            var yData = data.points[0].y;
-
             manualCentroids.push([xData, yData]);
             plotData(currentData, manualCentroids);
 
             if (manualCentroids.length === parseInt(numClustersInput.value)) {
                 showMessage('All centroids selected! Now you can run KMeans.');
-                plotDiv.removeAllListeners('plotly_click');
+                disableManualCentroidSelection();
             } else {
                 showMessage(`Selected centroid ${manualCentroids.length}/${numClustersInput.value}.`);
             }
         }
+    }
+
+    // Enable manual centroid selection anywhere on plot click
+    function enableManualCentroidSelection() {
+        plotDiv.addEventListener('click', onPlotClick);
+    }
+
+    // Disable manual centroid selection
+    function disableManualCentroidSelection() {
+        plotDiv.removeEventListener('click', onPlotClick);
     }
 
     // Reset algorithm without changing the dataset
@@ -233,12 +258,10 @@ document.addEventListener('DOMContentLoaded', function () {
         isRunning = false;
         isInitialized = false;
         manualCentroids = [];
-        plotDiv.removeAllListeners('plotly_click'); // Remove Plotly click listeners
+        disableManualCentroidSelection();
 
-        // Re-detect if manual mode is active
         isManualMode = initMethodSelect.value === 'manual';
 
-        // Re-plot the current data without any labels or centroids
         plotData(currentData);
 
         if (isManualMode) {
@@ -250,7 +273,6 @@ document.addEventListener('DOMContentLoaded', function () {
         enableButtons();
     });
 
-    // Event listeners for buttons
     generateButton.addEventListener('click', function() {
         fetchData();
         enableButtons();
@@ -262,11 +284,11 @@ document.addEventListener('DOMContentLoaded', function () {
         stepThroughKMeans();
     });
 
-    // Change listener for initialization method
     initMethodSelect.addEventListener('change', function () {
         isInitialized = false;
         manualCentroids = [];
-        plotDiv.removeAllListeners('plotly_click'); // Remove Plotly click listeners
+        disableManualCentroidSelection();
+
         if (initMethodSelect.value === 'manual') {
             isManualMode = true;
             showMessage('Manual mode activated! Click on the plot to select centroids.');
@@ -278,10 +300,11 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Change listener for number of clusters
     numClustersInput.addEventListener('change', function () {
         isInitialized = false;
         manualCentroids = [];
+        disableManualCentroidSelection();
+
         if (isManualMode) {
             showMessage('Number of clusters changed. Please reselect manual centroids.');
             plotData(currentData);
@@ -291,7 +314,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Function to disable buttons
     function disableButtons() {
         stepButton.disabled = true;
         runButton.disabled = true;
@@ -301,7 +323,6 @@ document.addEventListener('DOMContentLoaded', function () {
         initMethodSelect.disabled = true;
     }
 
-    // Function to enable buttons
     function enableButtons() {
         stepButton.disabled = false;
         runButton.disabled = false;
@@ -311,6 +332,5 @@ document.addEventListener('DOMContentLoaded', function () {
         initMethodSelect.disabled = false;
     }
 
-    // Initialize with random data
     fetchData();
 });

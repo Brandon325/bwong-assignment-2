@@ -3,16 +3,13 @@ from flask import Flask, render_template, jsonify, request
 
 app = Flask(__name__)
 
-# Generate random data points
 def generate_random_data(n_points=300):
     X = np.random.randn(n_points, 2) * 5
     return X.tolist()
 
-# Euclidean distance between points
 def euclidean_distance(a, b):
     return np.linalg.norm(a - b)
 
-# KMeans clustering algorithm
 def kmeans(X, k, init='random', manual_centroids=None, max_iter=100):
     X = np.array(X)
     centroids = initialize_centroids(X, k, init, manual_centroids)
@@ -21,22 +18,18 @@ def kmeans(X, k, init='random', manual_centroids=None, max_iter=100):
     all_labels = []
 
     for _ in range(max_iter):
-        # Assign points to nearest centroid
         labels = assign_clusters(X, centroids)
-        # Compute new centroids
         new_centroids = recompute_centroids(X, labels, k)
 
         all_labels.append(labels.tolist())
         all_centroids.append(new_centroids.tolist())
 
-        # Check for convergence
         if np.allclose(centroids, new_centroids):
             break
         centroids = new_centroids
 
     return all_centroids, all_labels
 
-# Initialize centroids based on method
 def initialize_centroids(X, k, method='random', manual_centroids=None):
     if method == 'random':
         indices = np.random.choice(X.shape[0], size=k, replace=False)
@@ -52,7 +45,6 @@ def initialize_centroids(X, k, method='random', manual_centroids=None):
     else:
         raise ValueError("Unknown initialization method.")
 
-# Farthest First Initialization
 def farthest_first_initialization(X, k):
     centroids = [X[np.random.randint(0, X.shape[0])]]
     for _ in range(1, k):
@@ -61,7 +53,6 @@ def farthest_first_initialization(X, k):
         centroids.append(next_centroid)
     return np.array(centroids)
 
-# KMeans++ Initialization
 def kmeans_plus_plus_initialization(X, k):
     centroids = [X[np.random.randint(0, X.shape[0])]]
     for _ in range(1, k):
@@ -71,30 +62,25 @@ def kmeans_plus_plus_initialization(X, k):
         centroids.append(next_centroid)
     return np.array(centroids)
 
-# Assign points to nearest centroids
 def assign_clusters(X, centroids):
     return np.argmin(np.linalg.norm(X[:, np.newaxis] - centroids, axis=2), axis=1)
 
-# Recompute centroids
 def recompute_centroids(X, labels, k):
     new_centroids = []
     for i in range(k):
         points = X[labels == i]
         if len(points) == 0:
-            # Reinitialize centroid to a random data point
             new_centroid = X[np.random.randint(0, X.shape[0])]
         else:
             new_centroid = points.mean(axis=0)
         new_centroids.append(new_centroid)
     return np.array(new_centroids)
 
-# Route to generate random data
 @app.route('/generate-data')
 def generate_data():
     data = generate_random_data()
     return jsonify(data)
 
-# Route to run KMeans clustering
 @app.route('/run-kmeans', methods=['POST'])
 def run_kmeans_route():
     try:
@@ -119,7 +105,6 @@ def run_kmeans_route():
     except Exception as e:
         return jsonify({'error': 'An error occurred during KMeans clustering.'}), 500
 
-# Route for the index page
 @app.route('/')
 def index():
     return render_template('index.html')
